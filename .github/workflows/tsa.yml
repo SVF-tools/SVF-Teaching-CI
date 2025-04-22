@@ -25,7 +25,7 @@ jobs:
       with:
         repository: 'SVF-tools/SVF-Teaching-Solutions'
         path: 'solutions'
-        token: ${{ secrets.SOLUTIONS_PAT }}
+        token: ${{ secrets.TEACHING_CI }} 
 
     - uses: actions/setup-node@v3
       with:
@@ -71,19 +71,3 @@ jobs:
         ./bin/assign-3
         ./bin/assign-4
 
-    - name: Send email notification on failure
-      if: failure()
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.gmail.com
-        server_port: 465
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_PASSWORD }}
-        subject: '❌ Teaching Software Analysis CI Failed'
-        body: |
-          The Teaching Software Analysis CI workflow has failed.
-          
-          See the workflow run for more details:
-          https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        to: ${{ secrets.NOTIFICATION_EMAIL }}
-        from: GitHub Actions
