@@ -20,10 +20,13 @@ jobs:
         repository: 'SVF-tools/Software-Security-Analysis'
         path: 'teaching'
 
-    - name: Checkout solutions repo (manual clone with token)
-      run: |
-        git clone https://yuleisui:${{ secrets.yulei_git_key }}@github.com/yuleisui/Software-Security-Analysis.git solutions
-
+    - name: Checkout solutions repo
+      uses: actions/checkout@v3
+      with:
+        repository: 'yuleisui/Software-Security-Analysis'
+        path: 'solutions'
+        token: ${{ secrets.YULEI_GIT_KEY }}
+        
     - uses: actions/setup-node@v3
       with:
         node-version: 18
