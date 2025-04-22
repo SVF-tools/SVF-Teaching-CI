@@ -1,0 +1,166 @@
+name: Teaching Software Verification CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'  # run every 6 hours
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  replace-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout teaching repo
+      uses: actions/checkout@v3
+      with:
+        repository: 'SVF-tools/Teaching-Software-Verification'
+        path: 'teaching'
+
+    - name: Checkout solutions repo
+      uses: actions/checkout@v3
+      with:
+        repository: 'SVF-tools/Software-Verification-Solution'
+        path: 'solutions'
+        token: ${{ secrets.SOLUTIONS_PAT }}
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    # Setup for Ubuntu
+    - name: ubuntu-setup
+      run: |
+        # Define dependency packages
+        export LIB_DEPS="cmake gcc g++ git zlib1g-dev libncurses5-dev libtinfo6 build-essential libssl-dev libpcre2-dev zip libzstd-dev"
+        export BUILD_DEPS="wget xz-utils git tcl software-properties-common gdb"
+        
+        # Fetch dependencies
+        sudo apt-get update --fix-missing
+        sudo apt-get install -y $BUILD_DEPS $LIB_DEPS
+
+    # Install SVF dependencies
+    - name: env-setup
+      run: |
+        npm install svf-lib
+
+    - name: Install Python 3.10 and pysvf
+      run: |
+        # Add deadsnakes PPA for multiple Python versions
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt-get update
+        sudo apt-get install -y python3.10-dev python3-pip
+        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+        python3 -m pip install pysvf -i https://test.pypi.org/simple/
+        python3 -m pip install z3-solver
+
+    - name: Replace assignments with solutions
+      run: |
+        set -e  
+        for i in {1..4}; do
+          echo "Copying Assignment-$i..."
+          if ! cp "solutions/Assignment-$i/Assignment-$i.cpp" "teaching/Assignment-$i/Assignment-$i.cpp"; then
+            echo "Failed to copy Assignment-$i"
+            exit 1
+          fi
+        done
+
+    - name: Build and Test
+      working-directory: teaching
+      run: |
+        export SVF_DIR=$(npm root)/SVF
+        export LLVM_DIR=$(npm root)/llvm-16.0.0.obj
+        export Z3_DIR=$(npm root)/z3.obj
+        echo "SVF_DIR="$SVF_DIR
+        echo "LLVM_DIR="$LLVM_DIR
+        echo "Z3_DIR="$Z3_DIR
+        cmake .
+        make
+        ./bin/assign-1
+        ./bin/assign-2
+        ./bin/assign-3 test0
+        ./bin/assign-3 test1
+        ./bin/assign-3 test2
+        ./bin/assign-3 test3
+        ./bin/assign-3 test4
+        ./bin/assign-3 test5
+        ./bin/assign-3 test6
+        ./bin/assign-3 test7
+        ./bin/assign-3 test8
+        ./bin/assign-3 test9
+        ./bin/assign-3 test10
+        ./bin/assign-4 Assignment-4/testcase/bc/test1.ll
+        ./bin/assign-4 Assignment-4/testcase/bc/test2.ll
+        ./bin/assign-4 Assignment-4/testcase/bc/test3.ll
+
+    - name: Test Python Assignment 1 
+      working-directory: teaching
+      run: |
+        cp ../solutions/python/Assignment-1/Assignment-1-Answer.py python/Assignment-1/ass1.py
+        cp ../solutions/python/Assignment-1/ass1-ci.py python/Assignment-1/ass1-ci.py
+        python3 python/Assignment-1/ass1-ci.py 
+
+    - name: Test Python Assignment 2
+      working-directory: teaching
+      run: |
+        cp ../solutions/python/Assignment-2/Assignment-2-Answer.py python/Assignment-2/ass2.py
+        cp ../solutions/python/Assignment-2/ass2-ci.py python/Assignment-2/ass2-ci.py
+        python3 python/Assignment-2/ass2-ci.py
+
+    - name: Test Python Assignment 4
+      working-directory: teaching
+      run: |
+        cp ../solutions/python/Assignment-4/Assignment-4-Answer.py python/Assignment-4/ass4.py
+        cp ../solutions/python/Assignment-4/ass4-ci.py python/Assignment-4/ass4-ci.py
+        python3 python/Assignment-4/ass4-ci.py
+
+    - name: Test Python Assignment 1 Solution
+      working-directory: solutions
+      run: |
+        for i in {1..10}; do
+          python3 python/Assignment-1/Assignment-1-Answer.py python/Assignment-1/test-exes/test$i.graph.txt
+        done
+
+    - name: Test Python Assignment 2 Solution
+      working-directory: solutions
+      run: |
+        for i in {1..10}; do
+          python3 python/Assignment-2/Assignment-2-Answer.py python/Assignment-2/testcase/bc/test$i.ll
+        done
+
+    - name: Test Python Assignment 3 Solution
+      working-directory: solutions
+      run: |
+        for i in {1..10}; do
+          python3 python/Assignment-3/Assignment-3-Answer.py test$i
+        done
+
+    - name: Test Python Assignment 4 Solution
+      working-directory: solutions
+      run: |
+        # traverse all *.ll files in the testcase directory 'python/Assignment-4/testcase/bc/'
+        for file in python/Assignment-4/testcase/bc/*.ll; do
+          python3 python/Assignment-4/Assignment-4-Answer.py ${file}
+        done
+      
+
+
+    - name: Send email notification on failure
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: '❌ Teaching Software Verification CI Failed'
+        body: |
+          The Teaching Software Verification CI workflow has failed.
+          
+          See the workflow run for more details:
+          https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: GitHub Actions

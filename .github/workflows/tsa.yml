@@ -1,0 +1,89 @@
+name: Teaching Software Analysis CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'  # 每6小时运行一次
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  replace-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout teaching repo
+      uses: actions/checkout@v3
+      with:
+        repository: 'SVF-tools/Teaching-Software-Analysis'
+        path: 'teaching'
+
+    - name: Checkout solutions repo
+      uses: actions/checkout@v3
+      with:
+        repository: 'SVF-tools/SVF-Teaching-Solutions'
+        path: 'solutions'
+        token: ${{ secrets.SOLUTIONS_PAT }}
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    # Setup for Ubuntu
+    - name: ubuntu-setup
+      run: |
+        sudo apt-get update
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        sudo apt-get update
+        sudo apt-get install cmake gcc g++ nodejs doxygen graphviz lcov libncurses5-dev libtinfo6 libzstd-dev
+
+    # Install SVF dependencies
+    - name: env-setup
+      run: |
+        npm install svf-lib
+
+    - name: Replace assignments with solutions
+      run: |
+        set -e  
+        for i in {1..4}; do
+          echo "Copying Assignment-$i..."
+          if ! cp "solutions/Assignment-$i/Assignment-$i.cpp" "teaching/Assignment-$i/Assignment-$i.cpp"; then
+            echo "Failed to copy Assignment-$i"
+            exit 1
+          fi
+        done
+
+    - name: Build and Test
+      working-directory: teaching
+      run: |
+        export SVF_DIR=$(npm root)/SVF
+        export LLVM_DIR=$(npm root)/llvm-16.0.0.obj
+        export Z3_DIR=$(npm root)/z3.obj
+        echo "SVF_DIR="$SVF_DIR
+        echo "LLVM_DIR="$LLVM_DIR
+        echo "Z3_DIR="$Z3_DIR
+        cmake .
+        make
+        ./bin/assign-1
+        ./bin/assign-2
+        ./bin/assign-3
+        ./bin/assign-4
+
+    - name: Send email notification on failure
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: '❌ Teaching Software Analysis CI Failed'
+        body: |
+          The Teaching Software Analysis CI workflow has failed.
+          
+          See the workflow run for more details:
+          https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: GitHub Actions
