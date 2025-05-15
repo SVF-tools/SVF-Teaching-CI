@@ -78,10 +78,10 @@ jobs:
 
         
         # Copy Lab-Exercise1 2 3
-        cp -r solutions/Lab-Exercise-1/GraphAlgorithm.cpp teaching/Lab-Exercise-1/GraphAlgorithm.cpp
-        cp -r solutions/Lab-Exercise-2/Z3Examples.cpp teaching/Lab-Exercise-2/Z3Examples.cpp
-        cp -r solutions/Lab-Exercise-2/test.cpp teaching/Lab-Exercise-2/test.cpp
-        cp -r solutions/Lab-Exercise-3/AEMgr.cpp teaching/Lab-Exercise-3/AEMgr.cpp
+        cp -r solutions/Lab-Exercise-1/CPP/GraphAlgorithm.cpp teaching/Lab-Exercise-1/CPP/GraphAlgorithm.cpp
+        cp -r solutions/Lab-Exercise-2/CPP/Z3Examples.cpp teaching/Lab-Exercise-2/CPP/Z3Examples.cpp
+        cp -r solutions/Lab-Exercise-2/CPP/test.cpp teaching/Lab-Exercise-2/CPP/test.cpp
+        cp -r solutions/Lab-Exercise-3/CPP/AEMgr.cpp teaching/Lab-Exercise-3/CPP/AEMgr.cpp
         
 
 
