@@ -35,8 +35,6 @@ jobs:
     - name: ubuntu-setup
       run: |
         sudo apt-get update
-        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-        sudo apt-get update
         sudo apt-get install cmake gcc g++ nodejs doxygen graphviz lcov libncurses5-dev libtinfo6 libzstd-dev
 
     # Install SVF dependencies
