@@ -54,7 +54,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install wheel pybind11 notebook nbconvert nbclient ipykernel build z3-solver
-        pip install pysvf -i https://test.pypi.org/simple/
+        pip install pysvf
 
     - name: Replace assignments with solutions
       run: |
