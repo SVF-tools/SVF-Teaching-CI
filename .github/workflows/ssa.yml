@@ -69,19 +69,20 @@ jobs:
         done
 
         # ---------------------------------------------------------------------
-        # Assignment 3 — the harness now lives in separate
-        # AEHelper / AEReporter files, the public Assignment_3.h diverges from
-        # the solution copy (template inlines no-op {} defaults for the
-        # optional hook virtuals; the solution defines real bodies in
-        # Assignment_3.cpp, so the inline defaults would re-define), and the
-        # full case corpus (Tests/cases/{public,hidden}/...) only lives in the
-        # solutions repo.  Mirror the entire Assignment-3 tree from the
-        # solutions repo so all of that lands together and the harness +
-        # ctest registrations stay consistent with the solution they expect.
+        # Assignment 3 — needs Assignment_3.h on top of Assignment_3.cpp / .py
+        # because the public Assignment_3.h diverges from the solution copy
+        # (template inlines no-op {} defaults for the optional hook virtuals;
+        # the solution defines real bodies in Assignment_3.cpp, which would
+        # re-define if the template's inline {} stayed in the .h).  The
+        # AEHelper / AEReporter harness files are kept in lock-step between
+        # the two repos by hand, and the test corpus we want to validate is
+        # the three public cases the teaching repo already ships under
+        # Assignment-3/Tests/.  No need to bring hidden cases over.
         # ---------------------------------------------------------------------
-        echo "Mirroring Assignment-3 from solutions..."
-        rm -rf teaching/Assignment-3
-        cp -R solutions/Assignment-3 teaching/Assignment-3
+        echo "Copying Assignment-3..."
+        cp solutions/Assignment-3/CPP/Assignment_3.cpp    teaching/Assignment-3/CPP/Assignment_3.cpp
+        cp solutions/Assignment-3/CPP/Assignment_3.h      teaching/Assignment-3/CPP/Assignment_3.h
+        cp solutions/Assignment-3/Python/Assignment_3.py  teaching/Assignment-3/Python/Assignment_3.py
 
         # ---------------------------------------------------------------------
         # Lab-Exercise 1 / 2 / 3 — single-file overlay.
