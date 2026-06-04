@@ -58,31 +58,38 @@ jobs:
 
     - name: Replace assignments with solutions
       run: |
-        set -e  
-        # Copy Ass 1 2 3 Cpp version
-        for i in {1..3}; do
+        set -e
+        # ---------------------------------------------------------------------
+        # Assignment 1 / 2 — single-file overlay (Assignment_$i.cpp / .py).
+        # ---------------------------------------------------------------------
+        for i in 1 2; do
           echo "Copying Assignment-$i..."
-          if ! cp "solutions/Assignment-$i/CPP/Assignment_$i.cpp" "teaching/Assignment-$i/CPP/Assignment_$i.cpp"; then
-            echo "Failed to copy Assignment_$i CPP"
-            exit 1
-          fi
-        done
-        # Copy Ass 1 2 3 Python Version
-        for i in {1..3}; do
-          echo "Copying Assignment-$i..."
-          if ! cp "solutions/Assignment-$i/Python/Assignment_$i.py" "teaching/Assignment-$i/Python/Assignment_$i.py"; then
-            echo "Failed to copy Assignment_$i Python"
-            exit 1
-          fi
+          cp "solutions/Assignment-$i/CPP/Assignment_$i.cpp"  "teaching/Assignment-$i/CPP/Assignment_$i.cpp"
+          cp "solutions/Assignment-$i/Python/Assignment_$i.py" "teaching/Assignment-$i/Python/Assignment_$i.py"
         done
 
-        
-        # Copy Lab-Exercise1 2 3
-        cp -r solutions/Lab-Exercise-1/CPP/GraphAlgorithm.cpp teaching/Lab-Exercise-1/CPP/GraphAlgorithm.cpp
-        cp -r solutions/Lab-Exercise-2/CPP/Z3Examples.cpp teaching/Lab-Exercise-2/CPP/Z3Examples.cpp
-        cp -r solutions/Lab-Exercise-2/CPP/test.cpp teaching/Lab-Exercise-2/CPP/test.cpp
-        cp -r solutions/Lab-Exercise-3/CPP/AEMgr.cpp teaching/Lab-Exercise-3/CPP/AEMgr.cpp
-        
+        # ---------------------------------------------------------------------
+        # Assignment 3 — the harness now lives in separate
+        # AEHelper / AEReporter files, the public Assignment_3.h diverges from
+        # the solution copy (template inlines no-op {} defaults for the
+        # optional hook virtuals; the solution defines real bodies in
+        # Assignment_3.cpp, so the inline defaults would re-define), and the
+        # full case corpus (Tests/cases/{public,hidden}/...) only lives in the
+        # solutions repo.  Mirror the entire Assignment-3 tree from the
+        # solutions repo so all of that lands together and the harness +
+        # ctest registrations stay consistent with the solution they expect.
+        # ---------------------------------------------------------------------
+        echo "Mirroring Assignment-3 from solutions..."
+        rm -rf teaching/Assignment-3
+        cp -R solutions/Assignment-3 teaching/Assignment-3
+
+        # ---------------------------------------------------------------------
+        # Lab-Exercise 1 / 2 / 3 — single-file overlay.
+        # ---------------------------------------------------------------------
+        cp solutions/Lab-Exercise-1/CPP/GraphAlgorithm.cpp teaching/Lab-Exercise-1/CPP/GraphAlgorithm.cpp
+        cp solutions/Lab-Exercise-2/CPP/Z3Examples.cpp     teaching/Lab-Exercise-2/CPP/Z3Examples.cpp
+        cp solutions/Lab-Exercise-2/CPP/test.cpp           teaching/Lab-Exercise-2/CPP/test.cpp
+        cp solutions/Lab-Exercise-3/CPP/AEMgr.cpp          teaching/Lab-Exercise-3/CPP/AEMgr.cpp
 
 
     - name: Build and Test
