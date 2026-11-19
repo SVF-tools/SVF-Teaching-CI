@@ -17,7 +17,7 @@ jobs:
     - name: Checkout teaching repo
       uses: actions/checkout@v3
       with:
-        repository: 'SVF-tools/Teaching-Software-Analysis'
+        repository: 'SVF-tools/Software-Analysis-Studio'
         path: 'teaching'
 
     - name: Checkout solutions repo
@@ -59,15 +59,12 @@ jobs:
       working-directory: teaching
       run: |
         export SVF_DIR=$(npm root)/SVF
-        export LLVM_DIR=$(npm root)/llvm-21.1.0.obj
+        export LLVM_DIR=$(npm root)/llvm-22.1.0.obj
         export Z3_DIR=$(npm root)/z3.obj
         echo "SVF_DIR="$SVF_DIR
         echo "LLVM_DIR="$LLVM_DIR
         echo "Z3_DIR="$Z3_DIR
         cmake .
         make
-        ./bin/assign-1
-        ./bin/assign-2
-        ./bin/assign-3
-        ./bin/assign-4
+        ctest --output-on-failure
 
